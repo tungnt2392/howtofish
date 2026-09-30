@@ -1,0 +1,11 @@
+import { chromium } from 'playwright-core';
+const browser = await chromium.launch({ channel: 'msedge', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+page.on('console', m => console.log('[page]', m.type(), m.text()));
+page.on('pageerror', e => console.log('[pageerror]', e.message, e.stack?.split('\n').slice(0,4).join('|')));
+await page.goto('http://localhost:5173/?lowfx');
+await page.waitForFunction(() => window.__game);
+const t0 = await page.evaluate(() => window.__game.time); await page.waitForTimeout(2000);
+console.log('time advance', t0, await page.evaluate(() => window.__game.time));
+console.log(await page.evaluate(() => { const g = window.__game; return { hs: g.hitstop.scale(), ui: g.uiBlocking, st: g.fishing.state }; }));
+await browser.close();

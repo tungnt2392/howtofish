@@ -1,0 +1,16 @@
+import { chromium } from 'playwright-core';
+const [out = 'shots/fx.png', evalScript = '', wait = '350'] = process.argv.slice(2);
+const browser = await chromium.launch({ channel: 'msedge', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+const errors = [];
+page.on('console', m => { if (['error', 'warning'].includes(m.type())) errors.push(`[${m.type()}] ${m.text()}`); });
+page.on('pageerror', e => errors.push('[pageerror] ' + e.message));
+await page.goto('http://localhost:5173/?lowfx');
+await page.waitForFunction(() => window.__game);
+await page.evaluate(() => { const g = window.__game; g.player.pos.set(0, 0.58, -18); g.hud.start(); });
+await page.waitForTimeout(600);
+const __r = await page.evaluate(evalScript); if (__r !== undefined) console.log('eval →', JSON.stringify(__r));
+await page.waitForTimeout(Number(wait));
+await page.screenshot({ path: out });
+console.log(errors.length ? errors.join('\n') : 'no console errors');
+await browser.close();

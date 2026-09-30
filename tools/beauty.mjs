@@ -1,0 +1,10 @@
+import { chromium } from 'playwright-core';
+const browser = await chromium.launch({ channel: 'msedge', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+const errors = []; page.on('console', m => { if (['error'].includes(m.type())) errors.push(m.text()); }); page.on('pageerror', e => errors.push(e.message));
+await page.goto('http://localhost:5173/'); await page.waitForFunction(() => window.__game);
+await page.evaluate(() => { const g = window.__game; localStorage.clear(); g.hud.start(); g.store.state.rods = ['basic']; g.store.state.equippedRod = 'basic'; g.store.state.baits = { ham: 5 }; g.player.pos.set(-4.2, 0.6, -4.6); g.player.facing = 2.4; });
+await page.waitForTimeout(3500);
+await page.screenshot({ path: 'shots/80-market.png' });
+console.log(errors.length ? errors.join('\n') : 'no console errors');
+await browser.close();

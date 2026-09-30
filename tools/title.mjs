@@ -1,0 +1,11 @@
+import { chromium } from 'playwright-core';
+const browser = await chromium.launch({ channel: 'msedge', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+const errors = []; page.on('console', m => { if (['error', 'warning'].includes(m.type())) errors.push(m.text()); }); page.on('pageerror', e => errors.push(e.message));
+await page.goto('http://localhost:5173/?lowfx'); await page.waitForFunction(() => window.__game);
+await page.evaluate(() => localStorage.clear());
+await page.waitForTimeout(1500); await page.screenshot({ path: 'shots/70-title.png' });
+await page.click('#t-play'); await page.waitForTimeout(1500);
+await page.screenshot({ path: 'shots/71-start.png' });
+console.log(errors.length ? errors.join('\n') : 'no console errors');
+await browser.close();
